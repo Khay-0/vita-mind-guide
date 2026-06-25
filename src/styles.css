@@ -293,7 +293,13 @@
     transition: border-color 150ms, box-shadow 150ms;
   }
   .input-ios:focus { outline: none; border-color: color-mix(in oklab, var(--color-primary) 60%, transparent); box-shadow: 0 0 0 4px var(--color-ring); }
-  .input-chunky { @apply input-ios; }
+  .input-chunky {
+    width: 100%; background: var(--color-surface-1);
+    border: 1px solid var(--color-border); border-radius: 20px;
+    padding: 0.85rem 1.1rem; font-size: 0.95rem; font-weight: 500;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .input-chunky:focus { outline: none; border-color: color-mix(in oklab, var(--color-primary) 60%, transparent); box-shadow: 0 0 0 4px var(--color-ring); }
 
   .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
   .safe-top    { padding-top: max(0.5rem, env(safe-area-inset-top)); }
