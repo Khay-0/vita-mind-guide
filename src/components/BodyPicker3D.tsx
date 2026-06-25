@@ -14,16 +14,17 @@ import {
   Undo2,
 } from "lucide-react";
 
+import mannequinAsset from "@/assets/mannequin.glb.asset.json";
+
 export type Sex = "male" | "female";
 export type BodyRegion = string;
 export const REGION_LABELS: Record<string, string> = {};
 
-// Three.js reference humanoid mannequin (Mixamo "X Bot"). Single clean mesh,
-// no anatomical layers, no clothing, CORS-enabled CDN.
-const BODY_URL =
-  "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/Xbot.glb";
+// User-provided clean base-mesh mannequin (neutral gray, no muscles).
+const BODY_URL = mannequinAsset.url;
 
 useGLTF.preload(BODY_URL, true);
+
 
 type Tool = "move" | "brush" | "eraser";
 
