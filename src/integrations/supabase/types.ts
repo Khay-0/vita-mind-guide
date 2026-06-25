@@ -375,6 +375,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_targets: {
+        Row: {
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          kcal: number
+          protein_g: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carbs_g: number
+          created_at?: string
+          fat_g: number
+          kcal: number
+          protein_g: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          kcal?: number
+          protein_g?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           allergies: string[] | null
@@ -435,6 +465,39 @@ export type Database = {
           user_id?: string
           weight_kg?: number | null
           xp?: number
+        }
+        Relationships: []
+      }
+      run_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          goal: string
+          id: string
+          plan: Json
+          updated_at: string
+          user_id: string
+          weeks: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          goal: string
+          id?: string
+          plan?: Json
+          updated_at?: string
+          user_id: string
+          weeks?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          goal?: string
+          id?: string
+          plan?: Json
+          updated_at?: string
+          user_id?: string
+          weeks?: number
         }
         Relationships: []
       }
