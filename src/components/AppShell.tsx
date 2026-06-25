@@ -13,29 +13,31 @@ const tabs = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <main className="flex-1 pb-28">{children}</main>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
-        <div className="mx-auto max-w-xl px-3 pb-2 pt-1">
-          <div className="glass flex items-center justify-around rounded-[26px] px-2 py-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.18)]">
+    <div className="relative flex min-h-screen flex-col">
+      <main className="flex-1 pb-32">{children}</main>
+      <nav className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 safe-bottom">
+        <div className="pointer-events-auto mx-auto max-w-xl px-4 pb-3 pt-1">
+          <div className="glass-strong flex items-center justify-around rounded-[28px] px-1.5 py-1.5">
             {tabs.map(({ to, label, icon: Icon }) => {
               const active = pathname === to || pathname.startsWith(to + "/");
               return (
                 <Link
                   key={to}
                   to={to}
-                  className="group relative flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5"
+                  className="group relative flex flex-1 flex-col items-center gap-0.5 rounded-[22px] px-2 py-1.5"
                 >
                   <span
-                    className={`grid h-9 w-12 place-items-center rounded-2xl transition-all duration-300 ${
-                      active ? "bg-primary/12 text-primary" : "text-muted-foreground"
+                    className={`grid h-10 w-14 place-items-center rounded-[18px] transition-all duration-300 ${
+                      active
+                        ? "bg-gradient-to-br from-primary to-primary-dark text-primary-foreground shadow-[0_8px_20px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)]"
+                        : "text-muted-foreground"
                     }`}
                   >
                     <Icon size={20} strokeWidth={active ? 2.4 : 1.9} />
                   </span>
                   <span
-                    className={`text-[10px] font-semibold tracking-tight transition ${
-                      active ? "text-primary" : "text-muted-foreground"
+                    className={`text-[10px] font-bold tracking-tight transition ${
+                      active ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
                     {label}
@@ -64,13 +66,13 @@ export function Page({
   return (
     <div className="mx-auto w-full max-w-xl px-5 pt-6">
       {(title || right) && (
-        <header className="mb-5 flex items-start justify-between gap-2">
+        <header className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
             {title && (
-              <h1 className="truncate text-[28px] font-bold tracking-tight">{title}</h1>
+              <h1 className="truncate text-[30px] font-bold tracking-tight">{title}</h1>
             )}
             {subtitle && (
-              <p className="mt-0.5 text-[13.5px] text-muted-foreground">{subtitle}</p>
+              <p className="mt-1 text-[13.5px] text-muted-foreground">{subtitle}</p>
             )}
           </div>
           {right}

@@ -5,22 +5,17 @@ import { useSession } from "@/lib/auth";
 import { useEffect, useMemo } from "react";
 import { Page } from "@/components/AppShell";
 import { levelFromXp, COACH_LIST } from "@/lib/coaches";
-import {
-  PremiumCard,
-  SectionHeader,
-  StatTile,
-  RingProgress,
-  AreaChart,
-} from "@/components/ui-premium";
+import { RingProgress, AreaChart } from "@/components/ui-premium";
 import {
   Sparkles,
   ArrowRight,
-  Bell,
   User,
   Flame,
   Activity,
   CheckCircle2,
-  Target,
+  Dumbbell,
+  HeartPulse,
+  Droplet,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -42,18 +37,6 @@ function HomePage() {
     },
   });
 
-  const { data: activeCoaches } = useQuery({
-    queryKey: ["coach-profiles", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("coach_profiles")
-        .select("coach_id, updated_at")
-        .eq("user_id", userId!);
-      return (data ?? []) as { coach_id: string; updated_at: string }[];
-    },
-  });
-
   const { data: weeklyXp } = useQuery({
     queryKey: ["weekly-xp", userId],
     enabled: !!userId,
@@ -62,10 +45,8 @@ function HomePage() {
       since.setDate(since.getDate() - 6);
       since.setHours(0, 0, 0, 0);
       const { data } = await (supabase as any)
-        .from("xp_events")
-        .select("amount, created_at")
-        .eq("user_id", userId!)
-        .gte("created_at", since.toISOString());
+        .from("xp_events").select("amount, created_at")
+        .eq("user_id", userId!).gte("created_at", since.toISOString());
       return (data ?? []) as { amount: number; created_at: string }[];
     },
   });
@@ -74,10 +55,7 @@ function HomePage() {
     queryKey: ["trackers-home", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("health_trackers")
-        .select("id, status")
-        .eq("user_id", userId!);
+      const { data } = await (supabase as any).from("health_trackers").select("id, status").eq("user_id", userId!);
       return data ?? [];
     },
   });
@@ -86,13 +64,10 @@ function HomePage() {
     queryKey: ["today-checkins", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
+      const start = new Date(); start.setHours(0, 0, 0, 0);
       const { count } = await (supabase as any)
-        .from("tracker_entries")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId!)
-        .gte("created_at", start.toISOString());
+        .from("tracker_entries").select("id", { count: "exact", head: true })
+        .eq("user_id", userId!).gte("created_at", start.toISOString());
       return count ?? 0;
     },
   });
@@ -103,15 +78,12 @@ function HomePage() {
 
   const weekly = useMemo(() => {
     const days = Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      d.setHours(0, 0, 0, 0);
+      const d = new Date(); d.setDate(d.getDate() - (6 - i)); d.setHours(0, 0, 0, 0);
       return d;
     });
     const buckets = days.map(() => 0);
     for (const e of weeklyXp ?? []) {
-      const d = new Date(e.created_at);
-      d.setHours(0, 0, 0, 0);
+      const d = new Date(e.created_at); d.setHours(0, 0, 0, 0);
       const idx = days.findIndex((x) => x.getTime() === d.getTime());
       if (idx >= 0) buckets[idx] += e.amount;
     }
@@ -133,130 +105,166 @@ function HomePage() {
   const doneCount = (trackers ?? []).filter((t: any) => t.status === "done").length;
   const score = prof.health_score ?? 78;
   const dateLabel = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const max = COACH_LIST.find((x) => x.id === "muscu")!;
 
   return (
     <Page>
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-2 pt-2">
+      <header className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pt-2">
         <div className="min-w-0">
-          <div className="text-[12px] font-medium capitalize text-muted-foreground">{dateLabel}</div>
-          <h1 className="mt-0.5 text-[30px] font-bold tracking-tight">Bonjour, {firstName}</h1>
+          <div className="eyebrow capitalize">{dateLabel}</div>
+          <h1 className="mt-1 truncate text-[32px] font-bold leading-none">
+            Bonjour, <span className="text-primary">{firstName}</span>
+          </h1>
         </div>
-        <Link to="/profile" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-1 border border-border text-foreground/80 transition active:scale-95" aria-label="Mon profil">
+        <Link
+          to="/profile"
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface-1 text-foreground/80 shadow-[var(--elev-1)] ring-1 ring-border transition active:scale-95"
+          aria-label="Mon profil"
+        >
           <User size={18} />
         </Link>
-      </div>
+      </header>
 
-      <div className="space-y-4 stagger-fade">
-        {/* HERO — Vita IA consultation (primary CTA, Claude recommendation) */}
-        <Link
-          to="/ai"
-          className="group relative block overflow-hidden rounded-[32px] bg-gradient-to-br from-primary via-emerald-500 to-teal-600 p-6 text-primary-foreground shadow-[var(--elev-3)] transition active:scale-[0.99]"
-        >
-          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -bottom-10 -left-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur">
-              <Sparkles size={12} /> Cabinet médical
+      {/* BENTO */}
+      <div className="bento stagger-fade">
+        {/* HERO — Vita IA */}
+        <Link to="/ai" className="hero-card size-lg block transition active:scale-[0.99]" style={{ gridColumn: "span 6" }}>
+          <div className="relative flex items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/22 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur">
+                <Sparkles size={11} /> Cabinet médical
+              </div>
+              <h2 className="mt-3 text-[22px] font-bold leading-tight">
+                Comment tu te sens<br />aujourd'hui ?
+              </h2>
+              <p className="mt-1.5 max-w-[16rem] text-[12.5px] opacity-90">
+                Vita t'écoute, t'oriente et t'explique — réponse structurée et tappable.
+              </p>
+              <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold text-primary-dark shadow-[0_10px_24px_-12px_rgba(0,0,0,0.30)]">
+                Parler à Vita <ArrowRight size={14} />
+              </div>
             </div>
-            <h2 className="mt-3 text-[24px] font-bold leading-tight">
-              Comment tu te sens aujourd'hui, {firstName} ?
-            </h2>
-            <p className="mt-1.5 text-[13px] opacity-90">
-              Vita IA t'écoute — symptômes, photos, questions médicales. Réponse claire et suivi personnalisé.
-            </p>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[14px] font-bold text-primary shadow-md">
-              Parler à Vita <ArrowRight size={16} />
+            <div className="relative hidden h-28 w-28 shrink-0 sm:block">
+              <div className="absolute inset-0 rounded-full bg-white/15 blur-xl" />
             </div>
           </div>
         </Link>
 
-        {/* Score + XP card */}
-        <div className="overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-emerald-50 via-surface-1 to-violet-50 p-5 shadow-[var(--elev-2)]">
-          <div className="flex items-center gap-5">
-            <RingProgress value={score / 100} size={92} stroke={10}>
-              <div>
-                <div className="text-[24px] font-bold leading-none tracking-tight">{score}</div>
-                <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Score</div>
-              </div>
+        {/* Score ring */}
+        <div className="bento-tile tint-lavender size-md" style={{ gridColumn: "span 3" }}>
+          <div className="eyebrow">Score santé</div>
+          <div className="mt-3 flex items-center gap-3">
+            <RingProgress value={score / 100} size={72} stroke={9}>
+              <div className="text-[18px] font-bold leading-none">{score}</div>
             </RingProgress>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Niveau {level}</div>
-              <div className="mt-0.5 text-[18px] font-bold leading-tight">Belle dynamique</div>
-              <div className="mt-2 text-[12px] text-muted-foreground">
-                {xpInLevel} / {xpForNext} XP
-              </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border/70">
-                <div className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-700" style={{ width: `${Math.round(progress * 100)}%` }} />
-              </div>
+            <div>
+              <div className="text-[12px] font-bold">Belle dynamique</div>
+              <div className="text-[10.5px] text-muted-foreground">cette semaine</div>
             </div>
           </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <StatTile icon={<CheckCircle2 size={12} />} label="Aujourd'hui" value={todayCheckins ?? 0} trend="check-ins" accent="text-primary" />
-          <StatTile icon={<Activity size={12} />} label="Actifs" value={activeCount} trend={`${doneCount} terminés`} accent="text-accent" />
-          <StatTile icon={<Flame size={12} />} label="Semaine" value={weekly.total} trend="XP gagnés" accent="text-[var(--streak)]" />
+        {/* Level */}
+        <div className="bento-tile tint-cream size-md" style={{ gridColumn: "span 3" }}>
+          <div className="eyebrow">Niveau {level}</div>
+          <div className="mt-3 text-[24px] font-bold leading-none">{xp} <span className="text-[12px] font-semibold text-muted-foreground">XP</span></div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/60">
+            <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-dark transition-all duration-700" style={{ width: `${Math.round(progress * 100)}%` }} />
+          </div>
+          <div className="mt-1.5 text-[10.5px] text-muted-foreground">{xpInLevel}/{xpForNext} jusqu'au niveau {level + 1}</div>
         </div>
 
-        {/* Weekly activity chart */}
-        <PremiumCard>
-          <SectionHeader eyebrow="7 derniers jours" title="Activité hebdomadaire" />
-          <AreaChart data={weekly.buckets} labels={weekly.labels} />
-        </PremiumCard>
+        {/* Quick stats — 3 small */}
+        <StatBento icon={<CheckCircle2 size={14} />} label="Aujourd'hui" value={todayCheckins ?? 0} sub="check-ins" tint="tint-mint" />
+        <StatBento icon={<Activity size={14} />} label="Actifs" value={activeCount} sub={`${doneCount} faits`} tint="tint-peach" />
+        <StatBento icon={<Flame size={14} />} label="Semaine" value={weekly.total} sub="XP" tint="tint-sky" />
 
-        {/* Active coaches — Max only is real, others teased */}
-        <div>
-          <SectionHeader
-            eyebrow="Spécialistes"
-            title="Coach Max"
-            action={<Link to="/coach" className="text-[12px] font-semibold text-primary">Tout voir</Link>}
-          />
-          <Link
-            to="/coach/$id"
-            params={{ id: "muscu" }}
-            className="flex items-center gap-4 rounded-[24px] border border-border bg-gradient-to-br from-orange-50 to-rose-50 p-4 transition active:scale-[0.99]"
-          >
-            {(() => {
-              const c = COACH_LIST.find((x) => x.id === "muscu")!;
-              return (
-                <>
-                  <img src={c.mascot} alt="" width={72} height={72} className="h-16 w-16 object-contain drop-shadow-md" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600">Disponible</div>
-                    <div className="text-[15px] font-bold">{c.fullName.split("—")[0].trim()} — Musculation</div>
-                    <div className="text-[12px] text-muted-foreground">{c.tagline}</div>
-                  </div>
-                  <ArrowRight size={16} className="text-muted-foreground" />
-                </>
-              );
-            })()}
-          </Link>
-          <p className="mt-2 px-1 text-[11px] text-muted-foreground">
-            Nutrition, Sommeil, Running… arrivent en Premium prochainement.
-          </p>
+        {/* Weekly chart — wide */}
+        <div className="bento-tile size-lg" style={{ gridColumn: "span 6" }}>
+          <div className="flex items-baseline justify-between">
+            <div>
+              <div className="eyebrow">7 derniers jours</div>
+              <div className="mt-1 text-[18px] font-bold leading-none">Activité</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[20px] font-bold leading-none">{weekly.total}</div>
+              <div className="text-[10.5px] text-muted-foreground">XP gagnés</div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <AreaChart data={weekly.buckets} labels={weekly.labels} />
+          </div>
         </div>
 
-        {/* Reminder */}
-        {activeCount > 0 && (
-          <Link to="/suivi" className="flex items-center gap-3 rounded-2xl border border-border bg-surface-1 p-4 transition active:scale-[0.99]">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
-              <Bell size={18} />
+        {/* Coach Max — wide */}
+        <Link to="/coach/$id" params={{ id: "muscu" }} className="bento-tile size-wide tint-peach block" style={{ gridColumn: "span 4" }}>
+          <div className="flex items-center gap-3">
+            <img src={max.mascot} alt="" width={64} height={64} className="h-16 w-16 shrink-0 object-contain drop-shadow-md" />
+            <div className="min-w-0">
+              <div className="eyebrow text-accent-foreground/70">Coach</div>
+              <div className="text-[15px] font-bold leading-tight">Max</div>
+              <div className="text-[11px] text-muted-foreground">Musculation · Pompes live</div>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[14px] font-semibold leading-tight">Mets à jour tes suivis</div>
-              <div className="text-[12px] text-muted-foreground">
-                {activeCount} suivi{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""} en attente
-              </div>
+          </div>
+          <div className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-foreground">
+            S'entraîner <ArrowRight size={13} />
+          </div>
+        </Link>
+
+        {/* Santé tile */}
+        <Link to="/sante" className="bento-tile size-narrow tint-mint flex flex-col justify-between" style={{ gridColumn: "span 2" }}>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/70 text-primary-dark">
+            <HeartPulse size={16} />
+          </div>
+          <div>
+            <div className="text-[13px] font-bold leading-tight">Bilan</div>
+            <div className="text-[10.5px] text-muted-foreground">santé</div>
+          </div>
+        </Link>
+
+        {/* Hydration */}
+        <Link to="/hydration" className="bento-tile size-narrow tint-sky flex flex-col justify-between" style={{ gridColumn: "span 2" }}>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/70 text-primary-dark">
+            <Droplet size={16} />
+          </div>
+          <div>
+            <div className="text-[13px] font-bold leading-tight">Hydratation</div>
+            <div className="text-[10.5px] text-muted-foreground">aujourd'hui</div>
+          </div>
+        </Link>
+
+        {/* Suivis */}
+        <Link to="/suivi" className="bento-tile size-wide flex items-center justify-between" style={{ gridColumn: "span 4" }}>
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary">
+              <Dumbbell size={16} />
             </div>
-            <ArrowRight size={16} className="text-muted-foreground" />
-          </Link>
-        )}
+            <div>
+              <div className="text-[13.5px] font-bold leading-tight">Mes suivis</div>
+              <div className="text-[11px] text-muted-foreground">{activeCount} en cours</div>
+            </div>
+          </div>
+          <ArrowRight size={16} className="text-muted-foreground" />
+        </Link>
       </div>
+
+      <p className="mt-6 px-1 text-center text-[11px] text-muted-foreground">
+        Vita IA fournit des informations générales — pas un substitut médical.
+      </p>
       <div className="h-6" />
     </Page>
   );
 }
-// Unused but kept to preserve original imports.
-void Target;
+
+function StatBento({ icon, label, value, sub, tint }: { icon: React.ReactNode; label: string; value: number | string; sub: string; tint: string }) {
+  return (
+    <div className={`bento-tile size-sm ${tint} flex flex-col justify-between`} style={{ gridColumn: "span 2" }}>
+      <div className="flex items-center gap-1.5 text-primary-dark/80">{icon}<span className="text-[10px] font-bold uppercase tracking-wider">{label}</span></div>
+      <div>
+        <div className="text-[22px] font-bold leading-none">{value}</div>
+        <div className="text-[10.5px] text-muted-foreground">{sub}</div>
+      </div>
+    </div>
+  );
+}
