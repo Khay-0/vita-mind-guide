@@ -4,8 +4,8 @@ import { COACH_LIST } from "@/lib/coaches";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
-import { CheckCircle2, Lock, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, Sparkles } from "lucide-react";
+
 
 // Phase 1 lineup: only Coach Max (musculation) is shipped alongside Vita IA.
 // The other coaches are gated behind a "Premium — bientôt" lock.
