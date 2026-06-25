@@ -39,7 +39,32 @@ export const Route = createFileRoute("/_authenticated/coach/$id")({
   component: CoachDetail,
 });
 
+function MaxPushupsOnly() {
+  return (
+    <div>
+      <CoachHero
+        coachId="muscu"
+        kicker="Session live"
+        title="Pompes en temps réel"
+        subtitle="Max compte tes reps et corrige ta forme depuis la caméra."
+      />
+      <div className="overflow-hidden rounded-3xl border-2 border-border bg-card p-4 shadow-[var(--elev-2)]">
+        <Suspense
+          fallback={
+            <div className="grid aspect-[4/3] place-items-center rounded-2xl bg-muted text-sm text-muted-foreground">
+              <Loader2 className="animate-spin" />
+            </div>
+          }
+        >
+          <PushupCoach />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
 function CoachDetail() {
+
   const { id } = Route.useParams();
   const coachId = id as CoachId;
   const coach = COACHES[coachId];
@@ -97,11 +122,14 @@ function CoachDetail() {
         </Link>
       </div>
 
-      {!profile ? (
+      {coachId === "muscu" ? (
+        <MaxPushupsOnly />
+      ) : !profile ? (
         <Onboarding coachId={coachId} />
       ) : (
         <Dashboard coachId={coachId} profile={profile} />
       )}
+
     </Page>
   );
 }
