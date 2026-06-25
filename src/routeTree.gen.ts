@@ -9,38 +9,310 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiVisitReportRouteImport } from './routes/api/visit-report'
+import { Route as ApiTrackerPlanRouteImport } from './routes/api/tracker-plan'
+import { Route as ApiSttRouteImport } from './routes/api/stt'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedSanteRouteImport } from './routes/_authenticated.sante'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated.onboarding'
+import { Route as AuthenticatedMoodRouteImport } from './routes/_authenticated.mood'
+import { Route as AuthenticatedHydrationRouteImport } from './routes/_authenticated.hydration'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated.home'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated.history'
+import { Route as AuthenticatedBilanRouteImport } from './routes/_authenticated.bilan'
+import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated.ai'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated.activity'
+import { Route as AuthenticatedSuiviIndexRouteImport } from './routes/_authenticated.suivi.index'
+import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated.coach.index'
+import { Route as AuthenticatedSuiviIdRouteImport } from './routes/_authenticated.suivi.$id'
+import { Route as AuthenticatedCoachIdRouteImport } from './routes/_authenticated.coach.$id'
+import { Route as AuthenticatedCoachIdChatRouteImport } from './routes/_authenticated.coach.$id.chat'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVisitReportRoute = ApiVisitReportRouteImport.update({
+  id: '/api/visit-report',
+  path: '/api/visit-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTrackerPlanRoute = ApiTrackerPlanRouteImport.update({
+  id: '/api/tracker-plan',
+  path: '/api/tracker-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSttRoute = ApiSttRouteImport.update({
+  id: '/api/stt',
+  path: '/api/stt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSanteRoute = AuthenticatedSanteRouteImport.update({
+  id: '/sante',
+  path: '/sante',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMoodRoute = AuthenticatedMoodRouteImport.update({
+  id: '/mood',
+  path: '/mood',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHydrationRoute = AuthenticatedHydrationRouteImport.update({
+  id: '/hydration',
+  path: '/hydration',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedBilanRoute = AuthenticatedBilanRouteImport.update({
+  id: '/bilan',
+  path: '/bilan',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSuiviIndexRoute = AuthenticatedSuiviIndexRouteImport.update({
+  id: '/suivi/',
+  path: '/suivi/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCoachIndexRoute = AuthenticatedCoachIndexRouteImport.update({
+  id: '/coach/',
+  path: '/coach/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSuiviIdRoute = AuthenticatedSuiviIdRouteImport.update({
+  id: '/suivi/$id',
+  path: '/suivi/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCoachIdRoute = AuthenticatedCoachIdRouteImport.update({
+  id: '/coach/$id',
+  path: '/coach/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCoachIdChatRoute =
+  AuthenticatedCoachIdChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedCoachIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/ai': typeof AuthenticatedAiRoute
+  '/bilan': typeof AuthenticatedBilanRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/hydration': typeof AuthenticatedHydrationRoute
+  '/mood': typeof AuthenticatedMoodRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/sante': typeof AuthenticatedSanteRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tracker-plan': typeof ApiTrackerPlanRoute
+  '/api/visit-report': typeof ApiVisitReportRoute
+  '/coach/$id': typeof AuthenticatedCoachIdRouteWithChildren
+  '/suivi/$id': typeof AuthenticatedSuiviIdRoute
+  '/coach/': typeof AuthenticatedCoachIndexRoute
+  '/suivi/': typeof AuthenticatedSuiviIndexRoute
+  '/coach/$id/chat': typeof AuthenticatedCoachIdChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/activity': typeof AuthenticatedActivityRoute
+  '/ai': typeof AuthenticatedAiRoute
+  '/bilan': typeof AuthenticatedBilanRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/hydration': typeof AuthenticatedHydrationRoute
+  '/mood': typeof AuthenticatedMoodRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/sante': typeof AuthenticatedSanteRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tracker-plan': typeof ApiTrackerPlanRoute
+  '/api/visit-report': typeof ApiVisitReportRoute
+  '/coach/$id': typeof AuthenticatedCoachIdRouteWithChildren
+  '/suivi/$id': typeof AuthenticatedSuiviIdRoute
+  '/coach': typeof AuthenticatedCoachIndexRoute
+  '/suivi': typeof AuthenticatedSuiviIndexRoute
+  '/coach/$id/chat': typeof AuthenticatedCoachIdChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/bilan': typeof AuthenticatedBilanRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/hydration': typeof AuthenticatedHydrationRoute
+  '/_authenticated/mood': typeof AuthenticatedMoodRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/sante': typeof AuthenticatedSanteRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/stt': typeof ApiSttRoute
+  '/api/tracker-plan': typeof ApiTrackerPlanRoute
+  '/api/visit-report': typeof ApiVisitReportRoute
+  '/_authenticated/coach/$id': typeof AuthenticatedCoachIdRouteWithChildren
+  '/_authenticated/suivi/$id': typeof AuthenticatedSuiviIdRoute
+  '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
+  '/_authenticated/suivi/': typeof AuthenticatedSuiviIndexRoute
+  '/_authenticated/coach/$id/chat': typeof AuthenticatedCoachIdChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/activity'
+    | '/ai'
+    | '/bilan'
+    | '/history'
+    | '/home'
+    | '/hydration'
+    | '/mood'
+    | '/onboarding'
+    | '/profile'
+    | '/sante'
+    | '/api/chat'
+    | '/api/stt'
+    | '/api/tracker-plan'
+    | '/api/visit-report'
+    | '/coach/$id'
+    | '/suivi/$id'
+    | '/coach/'
+    | '/suivi/'
+    | '/coach/$id/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/activity'
+    | '/ai'
+    | '/bilan'
+    | '/history'
+    | '/home'
+    | '/hydration'
+    | '/mood'
+    | '/onboarding'
+    | '/profile'
+    | '/sante'
+    | '/api/chat'
+    | '/api/stt'
+    | '/api/tracker-plan'
+    | '/api/visit-report'
+    | '/coach/$id'
+    | '/suivi/$id'
+    | '/coach'
+    | '/suivi'
+    | '/coach/$id/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/activity'
+    | '/_authenticated/ai'
+    | '/_authenticated/bilan'
+    | '/_authenticated/history'
+    | '/_authenticated/home'
+    | '/_authenticated/hydration'
+    | '/_authenticated/mood'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/profile'
+    | '/_authenticated/sante'
+    | '/api/chat'
+    | '/api/stt'
+    | '/api/tracker-plan'
+    | '/api/visit-report'
+    | '/_authenticated/coach/$id'
+    | '/_authenticated/suivi/$id'
+    | '/_authenticated/coach/'
+    | '/_authenticated/suivi/'
+    | '/_authenticated/coach/$id/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ApiSttRoute: typeof ApiSttRoute
+  ApiTrackerPlanRoute: typeof ApiTrackerPlanRoute
+  ApiVisitReportRoute: typeof ApiVisitReportRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +320,199 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/visit-report': {
+      id: '/api/visit-report'
+      path: '/api/visit-report'
+      fullPath: '/api/visit-report'
+      preLoaderRoute: typeof ApiVisitReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tracker-plan': {
+      id: '/api/tracker-plan'
+      path: '/api/tracker-plan'
+      fullPath: '/api/tracker-plan'
+      preLoaderRoute: typeof ApiTrackerPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stt': {
+      id: '/api/stt'
+      path: '/api/stt'
+      fullPath: '/api/stt'
+      preLoaderRoute: typeof ApiSttRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/sante': {
+      id: '/_authenticated/sante'
+      path: '/sante'
+      fullPath: '/sante'
+      preLoaderRoute: typeof AuthenticatedSanteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mood': {
+      id: '/_authenticated/mood'
+      path: '/mood'
+      fullPath: '/mood'
+      preLoaderRoute: typeof AuthenticatedMoodRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/hydration': {
+      id: '/_authenticated/hydration'
+      path: '/hydration'
+      fullPath: '/hydration'
+      preLoaderRoute: typeof AuthenticatedHydrationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/bilan': {
+      id: '/_authenticated/bilan'
+      path: '/bilan'
+      fullPath: '/bilan'
+      preLoaderRoute: typeof AuthenticatedBilanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ai': {
+      id: '/_authenticated/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/suivi/': {
+      id: '/_authenticated/suivi/'
+      path: '/suivi'
+      fullPath: '/suivi/'
+      preLoaderRoute: typeof AuthenticatedSuiviIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/coach/': {
+      id: '/_authenticated/coach/'
+      path: '/coach'
+      fullPath: '/coach/'
+      preLoaderRoute: typeof AuthenticatedCoachIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/suivi/$id': {
+      id: '/_authenticated/suivi/$id'
+      path: '/suivi/$id'
+      fullPath: '/suivi/$id'
+      preLoaderRoute: typeof AuthenticatedSuiviIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/coach/$id': {
+      id: '/_authenticated/coach/$id'
+      path: '/coach/$id'
+      fullPath: '/coach/$id'
+      preLoaderRoute: typeof AuthenticatedCoachIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/coach/$id/chat': {
+      id: '/_authenticated/coach/$id/chat'
+      path: '/chat'
+      fullPath: '/coach/$id/chat'
+      preLoaderRoute: typeof AuthenticatedCoachIdChatRouteImport
+      parentRoute: typeof AuthenticatedCoachIdRoute
+    }
   }
 }
 
+interface AuthenticatedCoachIdRouteChildren {
+  AuthenticatedCoachIdChatRoute: typeof AuthenticatedCoachIdChatRoute
+}
+
+const AuthenticatedCoachIdRouteChildren: AuthenticatedCoachIdRouteChildren = {
+  AuthenticatedCoachIdChatRoute: AuthenticatedCoachIdChatRoute,
+}
+
+const AuthenticatedCoachIdRouteWithChildren =
+  AuthenticatedCoachIdRoute._addFileChildren(AuthenticatedCoachIdRouteChildren)
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedBilanRoute: typeof AuthenticatedBilanRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedHydrationRoute: typeof AuthenticatedHydrationRoute
+  AuthenticatedMoodRoute: typeof AuthenticatedMoodRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSanteRoute: typeof AuthenticatedSanteRoute
+  AuthenticatedCoachIdRoute: typeof AuthenticatedCoachIdRouteWithChildren
+  AuthenticatedSuiviIdRoute: typeof AuthenticatedSuiviIdRoute
+  AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
+  AuthenticatedSuiviIndexRoute: typeof AuthenticatedSuiviIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedBilanRoute: AuthenticatedBilanRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedHydrationRoute: AuthenticatedHydrationRoute,
+  AuthenticatedMoodRoute: AuthenticatedMoodRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSanteRoute: AuthenticatedSanteRoute,
+  AuthenticatedCoachIdRoute: AuthenticatedCoachIdRouteWithChildren,
+  AuthenticatedSuiviIdRoute: AuthenticatedSuiviIdRoute,
+  AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
+  AuthenticatedSuiviIndexRoute: AuthenticatedSuiviIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
+  ApiSttRoute: ApiSttRoute,
+  ApiTrackerPlanRoute: ApiTrackerPlanRoute,
+  ApiVisitReportRoute: ApiVisitReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
