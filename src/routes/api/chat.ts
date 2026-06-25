@@ -127,8 +127,9 @@ export const Route = createFileRoute("/api/chat")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
-        // Use flash for speed (especially with images)
-        const model = "google/gemini-2.5-flash";
+        // GPT (ChatGPT-class) — meilleure structuration que Gemini Flash.
+        const model = "openai/gpt-5-mini";
+
 
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
