@@ -18,27 +18,25 @@ export type Sex = "male" | "female";
 export type BodyRegion = string;
 export const REGION_LABELS: Record<string, string> = {};
 
-// Anatomically correct human base mesh — we strip every internal layer
-// (muscles, organs, skeleton) and keep ONLY the outer skin shell, then
-// re-paint it with a clean matte gray studio material so it looks like
-// a neutral 3D mannequin (see reference image).
+// Three.js reference humanoid mannequin (Mixamo "X Bot"). Single clean mesh,
+// no anatomical layers, no clothing, CORS-enabled CDN.
 const BODY_URL =
-  "https://cdn.jsdelivr.net/gh/hpfrei/body-anatomy-3d-viewer@main/public/body.glb";
+  "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/models/gltf/Xbot.glb";
 
 useGLTF.preload(BODY_URL, true);
 
 type Tool = "move" | "brush" | "eraser";
 
-// Sharp red disc used as the decal stamp. Tight falloff = clean dot.
+// Soft red disc — used as the decal stamp on the body surface.
 function makeStampTexture() {
   const c = document.createElement("canvas");
   c.width = c.height = 512;
   const ctx = c.getContext("2d")!;
-  const g = ctx.createRadialGradient(256, 256, 180, 256, 256, 252);
-  g.addColorStop(0, "rgba(239,68,68,1)");
-  g.addColorStop(0.7, "rgba(239,68,68,0.98)");
-  g.addColorStop(0.92, "rgba(220,38,38,0.6)");
-  g.addColorStop(1, "rgba(220,38,38,0)");
+  const g = ctx.createRadialGradient(256, 256, 160, 256, 256, 250);
+  g.addColorStop(0, "rgba(244,63,94,1)");
+  g.addColorStop(0.65, "rgba(244,63,94,0.95)");
+  g.addColorStop(0.9, "rgba(225,29,72,0.55)");
+  g.addColorStop(1, "rgba(225,29,72,0)");
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(256, 256, 250, 0, Math.PI * 2);
@@ -64,50 +62,37 @@ function Body({
 }) {
   const { scene } = useGLTF(BODY_URL, true) as any;
 
-  // Clone, isolate the outer skin shell, repaint it gray, normalize scale.
+  // Clone, paint every mesh with a unified matte-gray studio material,
+  // and normalize position + height.
   const cloned = useMemo(() => {
     const s = scene.clone(true);
 
-    // 1. Collect every mesh + measure its world bbox volume.
-    const meshes: { mesh: THREE.Mesh; vol: number }[] = [];
-    s.updateMatrixWorld(true);
+    const grayMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color("#cbd0d6"),
+      roughness: 0.62,
+      metalness: 0.04,
+      envMapIntensity: 0.85,
+    });
+
     s.traverse((obj: any) => {
       if (obj.isMesh) {
-        const bb = new THREE.Box3().setFromObject(obj);
-        const sz = bb.getSize(new THREE.Vector3());
-        meshes.push({ mesh: obj, vol: sz.x * sz.y * sz.z });
+        // SkinnedMesh keeps its skeleton; we only swap the material.
+        obj.material = grayMat;
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+        obj.frustumCulled = false;
       }
     });
-    if (meshes.length === 0) return s;
 
-    // 2. Keep only the largest-volume mesh (outer skin shell).
-    meshes.sort((a, b) => b.vol - a.vol);
-    const keep = meshes[0].mesh;
-    for (const m of meshes) {
-      if (m.mesh !== keep) m.mesh.visible = false;
-    }
-
-    // 3. Apply a clean neutral-gray studio material.
-    const grayMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#c8ccd1"),
-      roughness: 0.55,
-      metalness: 0.05,
-    });
-    keep.material = grayMat;
-    keep.castShadow = true;
-    keep.receiveShadow = true;
-    keep.frustumCulled = false;
-
-    // 4. Center + normalize height to 1.9 units.
-    const box = new THREE.Box3().setFromObject(keep);
+    // Center on origin, scale to 1.85 units tall.
+    s.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(s);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     s.position.set(-center.x, -box.min.y, -center.z);
-    const scl = 1.9 / Math.max(size.y, 0.001);
+    const scl = 1.85 / Math.max(size.y, 0.001);
     s.scale.setScalar(scl);
-    s.position.y *= scl;
-    s.position.x *= scl;
-    s.position.z *= scl;
+    s.position.multiplyScalar(scl);
     return s;
   }, [scene]);
 
@@ -116,7 +101,7 @@ function Body({
 
   function stampDecal(targetMesh: THREE.Mesh, point: THREE.Vector3, normal: THREE.Vector3) {
     if (!decalGroupRef.current) return;
-    const size = brushRef.current * 0.0012;
+    const size = brushRef.current * 0.0011;
     const orient = new THREE.Object3D();
     orient.position.copy(point);
     orient.lookAt(point.clone().add(normal));
@@ -143,7 +128,7 @@ function Body({
 
   function eraseAt(point: THREE.Vector3) {
     if (!decalGroupRef.current) return;
-    const r = brushRef.current * 0.0018;
+    const r = brushRef.current * 0.0017;
     const toRemove: THREE.Object3D[] = [];
     decalGroupRef.current.children.forEach((child) => {
       const c = new THREE.Box3().setFromObject(child).getCenter(new THREE.Vector3());
@@ -168,14 +153,12 @@ function Body({
     normal.applyMatrix3(nm).normalize();
 
     if (toolRef.current === "brush") {
-      // Smooth strokes: interpolate between last point and current one
-      // so fast moves don't leave gaps.
       const cur = e.point.clone();
       const last = lastPointRef.current;
-      const stepSize = brushRef.current * 0.0006;
+      const stepSize = brushRef.current * 0.00055;
       if (last && stepSize > 0) {
         const dist = last.distanceTo(cur);
-        const steps = Math.min(8, Math.max(1, Math.floor(dist / stepSize)));
+        const steps = Math.min(10, Math.max(1, Math.floor(dist / stepSize)));
         for (let i = 1; i <= steps; i++) {
           const p = last.clone().lerp(cur, i / steps);
           stampDecal(obj, p, normal);
@@ -220,7 +203,7 @@ function Body({
 function CameraReset({ resetKey }: { resetKey: number }) {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 0.95, 3.0);
+    camera.position.set(0, 1.0, 2.9);
     camera.lookAt(0, 0.95, 0);
   }, [resetKey, camera]);
   return null;
@@ -234,7 +217,7 @@ type Props = {
 
 export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
   const [tool, setTool] = useState<Tool>("brush");
-  const [brush, setBrush] = useState(28);
+  const [brush, setBrush] = useState(26);
   const [resetN, setResetN] = useState(0);
   const [hasPaint, setHasPaint] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -245,7 +228,6 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
   const drawingRef = useRef(false);
   const decalGroupRef = useRef<THREE.Group | null>(null);
   const glCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  // Group strokes per pointer-down so Undo removes the last stroke.
   const strokesRef = useRef<THREE.Mesh[][]>([]);
 
   useEffect(() => {
@@ -285,7 +267,6 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
     setStrokeCount(arr.length);
   }
 
-  // Mark stroke as closed on pointer up via effect on drawingRef changes.
   useEffect(() => {
     const onUp = () => {
       const last: any = strokesRef.current[strokesRef.current.length - 1];
@@ -340,58 +321,79 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
     tool === "brush" ? "crosshair" : tool === "eraser" ? "cell" : "grab";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/90 backdrop-blur-md">
-      <div className="flex w-full max-w-md flex-col bg-card">
-        <header className="flex items-center justify-between border-b border-border/60 px-4 py-3 safe-top">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black">
+      <div className="relative flex w-full max-w-md flex-col bg-[#0a0a0c] text-white">
+        {/* ===== HEADER ===== */}
+        <header
+          className="relative z-10 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)] pb-3"
+          style={{ background: "linear-gradient(180deg, rgba(10,10,12,0.95) 0%, rgba(10,10,12,0) 100%)" }}
+        >
           <button
             onClick={onClose}
-            className="rounded-xl p-2 hover:bg-muted transition"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/8 text-white/85 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/15"
             aria-label="Fermer"
           >
-            <X size={20} />
+            <X size={18} strokeWidth={2.2} />
           </button>
           <div className="text-center">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/45">
               Vita · Cabinet
             </div>
-            <div className="text-sm font-bold tracking-tight">
-              Dessine la zone douloureuse
+            <div className="mt-0.5 text-[15px] font-semibold tracking-tight text-white">
+              Localise ta douleur
             </div>
           </div>
           <button
             onClick={() => setResetN((n) => n + 1)}
-            className="rounded-xl p-2 hover:bg-muted transition"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/8 text-white/85 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/15"
             aria-label="Recentrer"
             title="Recentrer"
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={16} strokeWidth={2.2} />
           </button>
         </header>
 
-        <div className="relative flex-1 overflow-hidden bg-[radial-gradient(ellipse_at_center,_#1c1f24_0%,_#0a0c10_70%)]">
+        {/* ===== STAGE ===== */}
+        <div className="relative flex-1 overflow-hidden">
+          {/* Studio backdrop */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(120% 80% at 50% 35%, #1a1c22 0%, #0c0d11 55%, #050608 100%)",
+            }}
+          />
+          {/* Soft vignette */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(100% 70% at 50% 100%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 60%)",
+            }}
+          />
+
           <Canvas
             shadows
-            camera={{ position: [0, 0.95, 3.0], fov: 32 }}
-            gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
+            camera={{ position: [0, 1.0, 2.9], fov: 30 }}
+            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
             dpr={[1, 2]}
             style={{ cursor, touchAction: "none" }}
             onCreated={({ gl }) => {
               glCanvasRef.current = gl.domElement;
               gl.toneMapping = THREE.ACESFilmicToneMapping;
-              gl.toneMappingExposure = 1.05;
+              gl.toneMappingExposure = 1.0;
             }}
           >
-            <color attach="background" args={["#0b0d11"]} />
-            <hemisphereLight args={["#ffffff", "#1a1d23", 0.45]} />
+            <hemisphereLight args={["#ffffff", "#1a1d23", 0.5]} />
             <directionalLight
               position={[3, 5, 4]}
-              intensity={1.2}
+              intensity={1.15}
               castShadow
               shadow-mapSize={[2048, 2048]}
               shadow-bias={-0.0001}
             />
-            <directionalLight position={[-4, 3, -3]} intensity={0.35} color="#a8c5ff" />
-            <directionalLight position={[0, 1.5, -4]} intensity={0.25} color="#fff" />
+            <directionalLight position={[-4, 3, -3]} intensity={0.4} color="#a8c5ff" />
+            <directionalLight position={[0, 2, -4]} intensity={0.3} color="#fff7ed" />
             <Suspense fallback={null}>
               <Body
                 toolRef={toolRef}
@@ -404,9 +406,9 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
               <Environment preset="studio" />
               <ContactShadows
                 position={[0, -0.005, 0]}
-                opacity={0.55}
+                opacity={0.6}
                 scale={5}
-                blur={2.6}
+                blur={2.8}
                 far={2}
               />
             </Suspense>
@@ -417,91 +419,97 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
               zoomSpeed={0.7}
               rotateSpeed={0.9}
               minDistance={1.4}
-              maxDistance={5.5}
+              maxDistance={5}
               target={[0, 0.95, 0]}
-              minPolarAngle={Math.PI * 0.1}
-              maxPolarAngle={Math.PI * 0.9}
+              minPolarAngle={Math.PI * 0.12}
+              maxPolarAngle={Math.PI * 0.88}
               makeDefault
             />
             <CameraReset resetKey={resetN} />
           </Canvas>
 
-          {/* Hint */}
-          <div className="pointer-events-none absolute left-3 top-3 max-w-[60%] rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-md ring-1 ring-white/15">
+          {/* Hint pill */}
+          <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white/8 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-white/75 ring-1 ring-white/10 backdrop-blur-xl">
             {tool === "move"
-              ? "Glisse · pince pour zoomer"
+              ? "Glisse pour tourner"
               : tool === "brush"
-                ? "Dessine la zone douloureuse"
-                : "Touche un marqueur pour l'effacer"}
+                ? "Touche la zone douloureuse"
+                : "Touche un marqueur pour effacer"}
           </div>
 
-          {/* Right-side floating toolbar */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 rounded-2xl border border-white/10 bg-black/55 p-1.5 shadow-2xl backdrop-blur-md">
-            <ToolBtn active={tool === "move"} onClick={() => setTool("move")} label="Tourner">
-              <Move3d size={18} />
-            </ToolBtn>
+          {/* Floating tool dock */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 rounded-2xl bg-black/55 p-1.5 ring-1 ring-white/10 shadow-2xl backdrop-blur-2xl">
             <ToolBtn active={tool === "brush"} onClick={() => setTool("brush")} label="Pinceau" accent>
-              <Brush size={18} />
+              <Brush size={17} strokeWidth={2.2} />
             </ToolBtn>
             <ToolBtn active={tool === "eraser"} onClick={() => setTool("eraser")} label="Gomme">
-              <Eraser size={18} />
+              <Eraser size={17} strokeWidth={2.2} />
             </ToolBtn>
-            <div className="my-1 h-px bg-white/15" />
+            <ToolBtn active={tool === "move"} onClick={() => setTool("move")} label="Tourner">
+              <Move3d size={17} strokeWidth={2.2} />
+            </ToolBtn>
+            <div className="my-1 h-px w-6 bg-white/12" />
             <button
               onClick={undoLast}
               disabled={strokeCount === 0}
-              className="grid h-10 w-10 place-items-center rounded-xl text-white/85 hover:bg-white/10 disabled:opacity-25 transition"
-              title="Annuler le dernier tracé"
+              className="grid h-9 w-9 place-items-center rounded-xl text-white/85 transition hover:bg-white/10 disabled:opacity-25"
+              title="Annuler"
+              aria-label="Annuler"
             >
-              <Undo2 size={16} />
+              <Undo2 size={15} strokeWidth={2.2} />
             </button>
             <button
               onClick={clearAll}
               disabled={!hasPaint}
-              className="grid h-10 w-10 place-items-center rounded-xl text-white/85 hover:bg-white/10 disabled:opacity-25 transition"
+              className="grid h-9 w-9 place-items-center rounded-xl text-[9px] font-bold tracking-[0.08em] text-white/85 transition hover:bg-white/10 disabled:opacity-25"
               title="Tout effacer"
+              aria-label="Tout effacer"
             >
-              <span className="text-[10px] font-bold tracking-wider">RAZ</span>
+              RAZ
             </button>
           </div>
 
-          {/* Brush size */}
+          {/* Brush size — glass slider */}
           {tool !== "move" && (
-            <div className="absolute bottom-3 left-3 right-20 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/55 px-3 py-2 backdrop-blur-md">
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/80">
+            <div className="absolute bottom-3 left-3 right-[5.25rem] flex items-center gap-3 rounded-2xl bg-black/55 px-3.5 py-2.5 ring-1 ring-white/10 backdrop-blur-2xl">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/55">
                 Taille
               </span>
               <input
                 type="range"
                 min={8}
-                max={90}
+                max={80}
                 value={brush}
                 onChange={(e) => setBrush(Number(e.target.value))}
-                className="flex-1 accent-red-500"
+                className="flex-1 accent-rose-500"
               />
-              <span className="w-8 text-right text-[11px] font-bold text-white tabular-nums">
+              <span className="w-6 text-right text-[11px] font-semibold tabular-nums text-white/90">
                 {brush}
               </span>
             </div>
           )}
         </div>
 
-        <footer className="border-t border-border/60 p-3 safe-bottom">
-          <p className="mb-2 text-center text-[11px] text-muted-foreground">
+        {/* ===== FOOTER ===== */}
+        <footer
+          className="relative z-10 px-4 pt-4 pb-[max(env(safe-area-inset-bottom),14px)]"
+          style={{ background: "linear-gradient(0deg, rgba(10,10,12,0.95) 0%, rgba(10,10,12,0) 100%)" }}
+        >
+          <p className="mb-3 text-center text-[11px] text-white/50">
             Vita recevra une capture avec la zone marquée.
           </p>
           <button
             onClick={handleConfirm}
             disabled={!hasPaint || exporting}
-            className="btn-chunky w-full disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-[14px] font-semibold tracking-tight text-black shadow-[0_10px_30px_-12px_rgba(255,255,255,0.4)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40 disabled:shadow-none"
           >
             {exporting ? (
               <>
-                <Loader2 size={18} className="animate-spin" /> Préparation…
+                <Loader2 size={16} className="animate-spin" /> Préparation…
               </>
             ) : (
               <>
-                <Check size={18} /> Envoyer à Vita
+                <Check size={16} strokeWidth={2.5} /> Envoyer à Vita
               </>
             )}
           </button>
@@ -529,11 +537,11 @@ function ToolBtn({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`grid h-10 w-10 place-items-center rounded-xl transition ${
+      className={`grid h-9 w-9 place-items-center rounded-xl transition ${
         active
           ? accent
-            ? "bg-red-500 text-white shadow-lg shadow-red-500/40"
-            : "bg-white text-slate-900 shadow-lg"
+            ? "bg-rose-500 text-white shadow-[0_8px_20px_-6px_rgba(244,63,94,0.65)]"
+            : "bg-white text-black shadow-lg"
           : "text-white/80 hover:bg-white/10"
       }`}
     >
