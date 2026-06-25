@@ -97,11 +97,14 @@ function CoachDetail() {
         </Link>
       </div>
 
-      {!profile ? (
+      {coachId === "muscu" ? (
+        <MaxPushupsOnly />
+      ) : !profile ? (
         <Onboarding coachId={coachId} />
       ) : (
         <Dashboard coachId={coachId} profile={profile} />
       )}
+
     </Page>
   );
 }
