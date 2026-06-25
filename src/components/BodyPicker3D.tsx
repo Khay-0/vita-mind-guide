@@ -266,22 +266,23 @@ export function BodyPicker3D({ open, onClose, onConfirm }: Props) {
   }, [open]);
 
   function pushStroke(m: THREE.Mesh) {
-    if (!drawingRef.current && strokesRef.current.length === 0) {
-      strokesRef.current.push([m]);
-    } else if (drawingRef.current) {
-      // Start a new stroke group on the first stamp of a press.
-      const last = strokesRef.current[strokesRef.current.length - 1];
-      if (!last || last.length === 0 || last.__closed) {
+    const arr = strokesRef.current;
+    if (drawingRef.current) {
+      const last: any = arr[arr.length - 1];
+      if (!last || last.__closed) {
         const ns: any = [m];
-        strokesRef.current.push(ns);
+        ns.__closed = false;
+        arr.push(ns);
       } else {
         last.push(m);
       }
     } else {
-      strokesRef.current.push([m]);
+      const ns: any = [m];
+      ns.__closed = true;
+      arr.push(ns);
     }
     setHasPaint(true);
-    setStrokeCount(strokesRef.current.length);
+    setStrokeCount(arr.length);
   }
 
   // Mark stroke as closed on pointer up via effect on drawingRef changes.
