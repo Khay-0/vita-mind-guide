@@ -61,82 +61,44 @@ function CoachGallery() {
         </div>
       </Link>
 
-      <div className="grid grid-cols-2 gap-3 stagger-fade">
-        {COACH_LIST.map((c) => {
-          const available = AVAILABLE_COACHES.has(c.id);
+      <div className="grid grid-cols-1 gap-3 stagger-fade">
+        {COACH_LIST.filter((c) => AVAILABLE_COACHES.has(c.id)).map((c) => {
           const active = activeIds.has(c.id);
-          const cardClasses = available
-            ? "group relative overflow-hidden rounded-[24px] border border-border bg-surface-1 p-4 shadow-[var(--elev-1)] transition active:scale-[0.98] hover:shadow-[var(--elev-2)]"
-            : "group relative overflow-hidden rounded-[24px] border border-dashed border-border bg-surface-2 p-4 text-left transition opacity-90";
-          const content = (
-            <>
-              {available && active && (
+          return (
+            <Link
+              key={c.id}
+              to="/coach/$id"
+              params={{ id: c.id }}
+              className="group relative overflow-hidden rounded-[24px] border border-border bg-surface-1 p-4 shadow-[var(--elev-1)] transition active:scale-[0.98] hover:shadow-[var(--elev-2)]"
+            >
+              {active && (
                 <div className="absolute right-3 top-3 inline-flex items-center gap-0.5 rounded-full bg-success/12 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-success">
                   <CheckCircle2 size={10} /> Actif
                 </div>
               )}
-              {!available && (
-                <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-foreground/85 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-background">
-                  <Lock size={10} /> Bientôt
-                </div>
-              )}
-              <div
-                className={`mb-3 grid h-28 place-items-center rounded-2xl bg-gradient-to-br ${c.gradient} ${!available ? "saturate-50" : ""}`}
-              >
+              <div className={`mb-3 grid h-28 place-items-center rounded-2xl bg-gradient-to-br ${c.gradient}`}>
                 <img
                   src={c.mascot}
                   alt={c.name}
                   width={112}
                   height={112}
                   loading="lazy"
-                  className={`h-24 w-24 object-contain drop-shadow-lg ${!available ? "opacity-60" : ""}`}
+                  className="h-24 w-24 object-contain drop-shadow-lg"
                 />
               </div>
-              <div className="text-[14px] font-bold leading-tight">{c.name}</div>
-              <div className="mt-0.5 line-clamp-2 text-[11.5px] text-muted-foreground">
-                {c.tagline}
-              </div>
+              <div className="text-[15px] font-bold leading-tight">{c.name}</div>
+              <div className="mt-0.5 text-[12px] text-muted-foreground">{c.tagline}</div>
               <div
                 className="mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white"
-                style={{ backgroundColor: available ? c.accent : "var(--color-muted-foreground)" }}
+                style={{ backgroundColor: c.accent }}
               >
-                {available ? (active ? "Ouvrir" : "Démarrer") : "Premium"}
+                {active ? "Ouvrir" : "Démarrer"}
               </div>
-            </>
-          );
-          if (!available) {
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() =>
-                  toast.info(`${c.name} arrive bientôt`, {
-                    description:
-                      "Ce coach sera disponible en Premium. Pour l'instant, Coach Max et Vita IA t'accompagnent.",
-                  })
-                }
-                className={cardClasses}
-              >
-                {content}
-              </button>
-            );
-          }
-          return (
-            <Link
-              key={c.id}
-              to="/coach/$id"
-              params={{ id: c.id }}
-              className={cardClasses}
-            >
-              {content}
             </Link>
           );
         })}
       </div>
 
-      <p className="mt-5 px-1 text-[11px] text-muted-foreground">
-        Nutrition, Sommeil, Hydratation, Running et Poids rejoignent l'app en Premium dans les prochaines semaines.
-      </p>
 
       <div className="h-6" />
     </Page>
