@@ -356,95 +356,41 @@ function Chat({
           hasImage: !!imageDataUrl,
         }),
       });
-      if (!res.ok || !res.body) {
+      if (!res.ok) {
         const t = await res.text().catch(() => "");
         throw new Error(t || `Erreur ${res.status}`);
       }
 
-      // === Typewriter streaming: collect full text from SSE, then animate display ===
-      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-      let full = "";
-      let buf = "";
-      let shown = 0;
-      let done = false;
-      let raf: number | null = null;
+      const structured = (await res.json()) as VitaResponse;
+      const messageText = structured.message ?? "";
+      const title = structured.title ?? null;
 
-      const tick = () => {
-        const target = stripMarkers(full);
-        if (shown < target.length) {
-          // Pace: a few chars per frame for a natural typewriter feel
+      // Client-side typewriter on the final text.
+      {
+        const target = messageText;
+        let shown = 0;
+        while (shown < target.length) {
           const remaining = target.length - shown;
           const step = Math.max(1, Math.min(4, Math.ceil(remaining / 30)));
           shown = Math.min(target.length, shown + step);
           setStreamingText(target.slice(0, shown));
-        }
-        if (!done || shown < stripMarkers(full).length) {
-          raf = window.setTimeout(tick, 22) as unknown as number;
-        } else {
-          raf = null;
-        }
-      };
-      raf = window.setTimeout(tick, 22) as unknown as number;
-
-      while (true) {
-        const { value, done: rdone } = await reader.read();
-        if (rdone) break;
-        buf += value;
-        const parts = buf.split("\n\n");
-        buf = parts.pop() ?? "";
-        for (const part of parts) {
-          for (const line of part.split("\n")) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const payload = trimmed.slice(5).trim();
-            if (!payload || payload === "[DONE]") continue;
-            try {
-              const j = JSON.parse(payload);
-              const delta = j.choices?.[0]?.delta?.content;
-              if (typeof delta === "string" && delta) full += delta;
-            } catch {
-              /* ignore */
-            }
-          }
+          await new Promise((r) => setTimeout(r, 22));
         }
       }
-      done = true;
-      // Wait for typewriter to catch up before persisting / finalizing
-      const finalTarget = stripMarkers(full);
-      while (shown < finalTarget.length) {
-        await new Promise((r) => setTimeout(r, 25));
-      }
-      if (raf) clearTimeout(raf);
 
-      // Parse title + askPhoto from full
-      let title: string | null = null;
-      let content = full;
-      const titleMatch = content.match(/^\s*\[\[TITLE:\s*(.+?)\]\]\s*\n?/i);
-      if (titleMatch) {
-        title = titleMatch[1].trim().slice(0, 80);
-        content = content.slice(titleMatch[0].length).trim();
-      }
-      let askPhotoInstr: string | null = null;
-      const askMatch = content.match(/\[\[ASK_PHOTO(?::\s*([^\]]+))?\]\]/i);
-      if (askMatch) {
-        askPhotoInstr = (askMatch[1] || "").trim() || null;
-        content = content.replace(askMatch[0], "").trim();
-      }
-
-      // Persist assistant
+      // Persist assistant message with structured payload.
       const { data: insertedAssistant } = await supabase
         .from("chat_messages")
         .insert({
           thread_id: threadId,
           user_id: userId,
           role: "assistant",
-          content,
-        })
+          content: messageText,
+          structured: structured as unknown as Record<string, unknown>,
+        } as never)
         .select()
         .single();
 
-      // Append the assistant message to cache and clear the streaming bubble
-      // in the same render batch to prevent a brief duplicate flash.
       if (insertedAssistant) {
         qc.setQueryData<DBMsg[]>(["messages", threadId], (old = []) => [
           ...old,
@@ -454,18 +400,17 @@ function Chat({
       setStreamingText(null);
       setLoading(false);
 
-      const updates: any = {
-        last_message_preview: content.slice(0, 80),
+      const updates: Record<string, unknown> = {
+        last_message_preview: messageText.slice(0, 80),
         updated_at: new Date().toISOString(),
       };
       if (title && isFirstMessage) updates.title = title;
       await supabase.from("chat_threads").update(updates).eq("id", threadId);
 
-      if (askPhotoInstr !== null && !photo) {
-        setAskPhotoPopup(
-          askPhotoInstr ||
-            "Photo nette, bien éclairée, à 15-20 cm, avec la zone et son entourage visibles.",
-        );
+      // Photo request card → open the photo dialog.
+      const photoCard = structured.cards?.find((c) => c.type === "photo_request");
+      if (photoCard && !photo) {
+        setAskPhotoPopup(photoCard.instructions.join(" • "));
       }
 
       qc.invalidateQueries({ queryKey: ["threads", userId] });
