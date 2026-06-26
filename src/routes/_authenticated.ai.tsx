@@ -660,7 +660,22 @@ function Chat({
             i === messages.length - 1 &&
             streamingText === null &&
             !loading;
-          const offer = isLastAssistant ? parseOffer(m.content) : null;
+          // Prefer structured tracker_offer card; fall back to legacy marker for old messages.
+          let offer: { title: string; emoji: string; summary: string } | null = null;
+          if (isLastAssistant) {
+            const trackerCard = m.structured?.cards?.find(
+              (c) => c.type === "tracker_offer",
+            );
+            if (trackerCard && trackerCard.type === "tracker_offer") {
+              offer = {
+                title: trackerCard.title,
+                emoji: trackerCard.emoji,
+                summary: trackerCard.summary,
+              };
+            } else {
+              offer = parseOffer(m.content);
+            }
+          }
           return (
             <Bubble
               key={m.id}
