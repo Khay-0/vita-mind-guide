@@ -21,6 +21,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import mascot from "@/assets/vita-mascot.png";
+import type { VitaResponse } from "@/lib/vita-ai/schemas";
 
 const BodyPicker3D = lazy(() =>
   import("@/components/BodyPicker3D").then((m) => ({ default: m.BodyPicker3D })),
@@ -32,6 +33,7 @@ type DBMsg = {
   content: string;
   image_url: string | null;
   created_at: string;
+  structured?: VitaResponse | null;
 };
 
 export const Route = createFileRoute("/_authenticated/ai")({
