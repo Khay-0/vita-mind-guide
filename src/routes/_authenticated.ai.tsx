@@ -400,7 +400,11 @@ function Chat({
       setStreamingText(null);
       setLoading(false);
 
-      const updates: Record<string, unknown> = {
+      const updates: {
+        last_message_preview: string;
+        updated_at: string;
+        title?: string;
+      } = {
         last_message_preview: messageText.slice(0, 80),
         updated_at: new Date().toISOString(),
       };
