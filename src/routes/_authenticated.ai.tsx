@@ -857,8 +857,16 @@ function Bubble({
   creatingTracker?: boolean;
 }) {
   const isUser = m.role === "user";
-  const parsed = !isUser ? parseChoices(m.content) : { text: m.content, choices: [] };
-  const displayText = isUser ? m.content : parsed.text;
+  // Prefer structured payload (new messages). Fall back to legacy [[CHOICES]] markers (old messages).
+  const structuredReplies = !isUser ? m.structured?.quickReplies ?? [] : [];
+  const legacy = !isUser && structuredReplies.length === 0
+    ? parseChoices(m.content)
+    : { text: m.content, choices: [] };
+  const displayText = isUser ? m.content : legacy.text;
+  const choices: Array<{ label: string; value: string }> =
+    structuredReplies.length > 0
+      ? structuredReplies.map((q) => ({ label: q.label, value: q.value }))
+      : legacy.choices.map((c) => ({ label: c, value: c }));
   return (
     <div className={`flex items-end gap-2 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
@@ -876,11 +884,15 @@ function Bubble({
             </div>
           )}
         </div>
-        {!isUser && showChoices && parsed.choices.length > 0 && onChoose && (
+        {!isUser && showChoices && choices.length > 0 && onChoose && (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {parsed.choices.map((c) => (
-              <button key={c} onClick={() => onChoose(c)} className="choice-chip">
-                {c}
+            {choices.map((c) => (
+              <button
+                key={c.value}
+                onClick={() => onChoose(c.value)}
+                className="choice-chip"
+              >
+                {c.label}
               </button>
             ))}
           </div>
