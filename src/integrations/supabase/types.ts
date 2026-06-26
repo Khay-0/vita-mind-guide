@@ -66,6 +66,7 @@ export type Database = {
           id: string
           image_url: string | null
           role: string
+          structured: Json | null
           thread_id: string
           user_id: string
         }
@@ -75,6 +76,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           role: string
+          structured?: Json | null
           thread_id: string
           user_id: string
         }
@@ -84,6 +86,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           role?: string
+          structured?: Json | null
           thread_id?: string
           user_id?: string
         }
@@ -247,6 +250,45 @@ export type Database = {
           sleep_score?: number | null
           strengths?: string[] | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      health_memories: {
+        Row: {
+          category: string
+          confirmed_by_user: boolean
+          created_at: string
+          id: string
+          label: string
+          sensitive: boolean
+          source_thread_id: string | null
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          category: string
+          confirmed_by_user?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          sensitive?: boolean
+          source_thread_id?: string | null
+          updated_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          category?: string
+          confirmed_by_user?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          sensitive?: boolean
+          source_thread_id?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: string
         }
         Relationships: []
       }
@@ -418,6 +460,7 @@ export type Database = {
           last_active_date: string | null
           level: number
           medications: string[] | null
+          memory_enabled: boolean
           onboarded: boolean
           sex: string | null
           streak_days: number
@@ -438,6 +481,7 @@ export type Database = {
           last_active_date?: string | null
           level?: number
           medications?: string[] | null
+          memory_enabled?: boolean
           onboarded?: boolean
           sex?: string | null
           streak_days?: number
@@ -458,6 +502,7 @@ export type Database = {
           last_active_date?: string | null
           level?: number
           medications?: string[] | null
+          memory_enabled?: boolean
           onboarded?: boolean
           sex?: string | null
           streak_days?: number
